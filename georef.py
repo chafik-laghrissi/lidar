@@ -116,7 +116,8 @@ class Georef:
         gps_indexes = [x * georef.PROFILES_NUMBER for x in gps_indexes]
         threads = []
 
-        def process(georef, index, gps_index):
+        def process(arg0, index, gps_index):
+            georef=arg0[0]
             data = georef.scanner_data[index]
             current_profile = 0
             georef_data = []
@@ -135,8 +136,9 @@ class Georef:
         try:
             os.mkdir('tmp')
             for index, gps_index in enumerate(gps_indexes):
+                arg0=[georef]
                 t = ctx.Process(target=process,
-                                        args=(georef, index, gps_index))
+                                        args=(arg0, index, gps_index))
                 threads.append(t)
             print('start processing')
             for thread in threads:
