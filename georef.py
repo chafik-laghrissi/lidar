@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import os
-from threading import Thread
 from glob import glob
 import shutil
 import multiprocessing
@@ -115,7 +114,6 @@ class Georef:
         gps_indexes = list(range(len(georef.scanner_data)))
         gps_indexes = [x * georef.PROFILES_NUMBER for x in gps_indexes]
         threads = []
-        os.mkdir('tmp')
 
         def process(georef, index, gps_index):
             data = georef.scanner_data[index]
@@ -133,21 +131,26 @@ class Georef:
                                                             index=False)
             print(f'file {index+1} processed.')
 
-        for index, gps_index in enumerate(gps_indexes):
-            t = multiprocessing.Process(target=process,
+        try:
+            os.mkdir('tmp')
+            for index, gps_index in enumerate(gps_indexes):
+                t = multiprocessing.Process(target=process,
                                         args=(georef, index, gps_index))
-            threads.append(t)
-        print('start processing')
-        for thread in threads:
-            thread.start()
+                threads.append(t)
+            print('start processing')
+            for thread in threads:
+                thread.start()
 
-        for thread in threads:
-            thread.join()
-        files = glob('tmp/*.csv')
-        df = pd.DataFrame(columns=['X', 'Y', 'Z'])
-        for file in files:
-            df = df.append(pd.read_csv(file))
-        df.to_csv(path, index=False)
-        print('Cleaning...')
-        shutil.rmtree('tmp')
-        print('Process was completed.')
+            for thread in threads:
+                thread.join()
+            files = glob('tmp/*.csv')
+            df = pd.DataFrame(columns=['X', 'Y', 'Z'])
+            for file in files:
+                df = df.append(pd.read_csv(file))
+            df.to_csv(path, index=False)
+            print('Cleaning...')
+            shutil.rmtree('tmp')
+            print('Process was completed.')
+        except Exception as ex:
+            shutil.rmtree('tmp')
+            print(ex)
