@@ -115,7 +115,8 @@ class Georef:
         gps_indexes = [x * georef.PROFILES_NUMBER for x in gps_indexes]
         threads = []
 
-        def process(georef, index, gps_index):
+        def process(cls, index, gps_index):
+            georef = cls(gps_path, scanner_paths)
             data = georef.scanner_data[index]
             current_profile = 0
             georef_data = []
@@ -135,12 +136,11 @@ class Georef:
             os.mkdir('tmp')
             for index, gps_index in enumerate(gps_indexes):
                 t = multiprocessing.Process(target=process,
-                                        args=(georef, index, gps_index))
+                                            args=(cls, index, gps_index))
                 threads.append(t)
             print('start processing')
             for thread in threads:
                 thread.start()
-
             for thread in threads:
                 thread.join()
             files = glob('tmp/*.csv')
