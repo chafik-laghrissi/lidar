@@ -3,7 +3,7 @@ import pandas as pd
 import os
 from glob import glob
 import shutil
-import multiprocessing
+from threading import Thread
 
 
 class Georef:
@@ -115,8 +115,7 @@ class Georef:
         gps_indexes = [x * georef.PROFILES_NUMBER for x in gps_indexes]
         threads = []
 
-        def process(cls, index, gps_index):
-            georef = cls(gps_path, scanner_paths)
+        def process(georef, index, gps_index):
             data = georef.scanner_data[index]
             current_profile = 0
             georef_data = []
@@ -135,12 +134,13 @@ class Georef:
         try:
             os.mkdir('tmp')
             for index, gps_index in enumerate(gps_indexes):
-                t = multiprocessing.Process(target=process,
-                                            args=(cls, index, gps_index))
+                t = Thread(target=process,
+                                        args=(georef, index, gps_index))
                 threads.append(t)
             print('start processing')
             for thread in threads:
                 thread.start()
+
             for thread in threads:
                 thread.join()
             files = glob('tmp/*.csv')
