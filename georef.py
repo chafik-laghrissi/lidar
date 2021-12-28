@@ -6,6 +6,7 @@ from glob import glob
 import shutil
 import multiprocessing
 
+
 class Georef:
     """
     Georef class aim to georeference lidar data
@@ -109,13 +110,12 @@ class Georef:
             print(ex)
 
     @classmethod
-    def georef_by_file(cls, gps_path: str, scanner_paths: list,path):
+    def georef_by_file(cls, gps_path: str, scanner_paths: list, path):
         georef = cls(gps_path, scanner_paths)
-        gps_indexs = list(range(len(georef.scanner_data)))
-        gps_indexs = [x * georef.PROFILES_NUMBER for x in gps_indexs]
+        gps_indexes = list(range(len(georef.scanner_data)))
+        gps_indexes = [x * georef.PROFILES_NUMBER for x in gps_indexes]
         threads = []
         os.mkdir('tmp')
-        print('tmp file was created')
 
         def process(georef, index, gps_index):
             data = georef.scanner_data[index]
@@ -133,8 +133,9 @@ class Georef:
                                                             index=False)
             print(f'file {index+1} processed.')
 
-        for index, gps_index in enumerate(gps_indexs):
-            t = multiprocessing.Process(target=process, args=(georef, index, gps_index))
+        for index, gps_index in enumerate(gps_indexes):
+            t = multiprocessing.Process(target=process,
+                                        args=(georef, index, gps_index))
             threads.append(t)
         print('start processing')
         for thread in threads:
@@ -146,7 +147,7 @@ class Georef:
         df = pd.DataFrame(columns=['X', 'Y', 'Z'])
         for file in files:
             df = df.append(pd.read_csv(file))
-        df.to_csv(path,index=False)
+        df.to_csv(path, index=False)
         print('Cleaning...')
         shutil.rmtree('tmp')
         print('Process was completed.')
